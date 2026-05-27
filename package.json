@@ -1,0 +1,21 @@
+{
+  "name": "sta-ai-os",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync:ghl": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-ghl.ts",
+    "sync:clickup": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-clickup.ts",
+    "sync:outlook": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-outlook.ts",
+    "sync:teams": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-teams.ts",
+    "sync:seamless": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-seamless.ts",
+    "sync:all": "npm run sync:ghl && npm run sync:clickup && npm run sync:outlook && npm run sync:teams && npm run sync:seamless"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}

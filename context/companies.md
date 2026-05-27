@@ -1,77 +1,88 @@
 # Companies & Products
 
-> This file describes your business portfolio — every company, product, and revenue stream. The AI OS uses this to understand what you're building, who you serve, and how the pieces fit together.
-
----
-
-## How This Connects
-
-- **personal-info.md** defines your role and how you think
-- **This file** describes what you're building and for whom
-- **team.md** maps who does what across these companies
-- **strategy.md** captures what you're optimising for
-- **current-data.md** tracks the numbers behind each business
-- **integrations.md** lists the tools and data sources each company uses
-
----
-
-## Why This Matters
-
-Most founders don't run a single, simple business. You might have multiple companies, products at different stages, or revenue streams that feed each other. The AI OS needs to understand the full picture — not just each company in isolation, but how they interact. A decision in one business often has cascading effects on another.
+> This file describes Tharindu's business portfolio — every company, product, and revenue stream.
 
 ---
 
 ## How Your Businesses Connect
 
-[If you run multiple businesses or products, describe how they relate. Do they share customers? Does one feed leads to another? Is there a flywheel?]
-
-[Example: "My agency generates case studies and proof points that feed my education business. Education members become power users of my software product. The software product's success gives me content topics and credibility. It's a flywheel."]
-
-[If you run a single business, describe how your products/services relate to each other.]
+STA is the primary active company and professional focus — client delivery, AI automation implementation, and recurring revenue. B For Bots is a complementary RPA/automation startup that shares the same domain expertise and could feed into or spin out of STA's capabilities over time. ReInkArts is a separate creative services brand. The experimental automation projects serve as R&D and future-option exploration.
 
 ---
 
-## Company 1: [Name]
+## Company 1: Scale Through Automation (STA)
 
-**What it is:** [One sentence — what does this business do?]
+**What it is:** AI and automation consulting and implementation company that helps businesses replace manual operations with intelligent, automated systems.
 
-**Your role:** [What's your involvement? Founder? Operator? Passive?]
+**Your role:** GoHighLevel Developer and Automation Support Engineer — core technical builder and delivery lead.
 
-**Revenue model:** [How does it make money? Subscriptions, project fees, retainers, one-time sales?]
+**Revenue model:** Project-based implementation fees + monthly recurring retainers + AI employee/automation subscriptions.
 
 **Products / Services:**
 
 | Product/Service | Price | Audience | Description |
 |----------------|-------|----------|-------------|
-| [Name] | [Price/range] | [Who buys it] | [What it is and what it delivers] |
-| [Name] | [Price/range] | [Who buys it] | [What it is and what it delivers] |
+| AI Agents / AI Employees | Project + monthly subscription | SMBs, service businesses | Digital workers handling calls, chats, appointment booking, lead qualification, and customer engagement 24/7 |
+| Business Process Automation (BPA) | $1,000 – $15,000+ setup | Operations-heavy businesses | End-to-end automation of workflows: lead → CRM → follow-up, invoicing, onboarding, internal ops |
+| Workflow Automation & System Integration | $1,000 – $15,000+ setup | Agencies, startups, SMBs | Connecting CRMs, messaging platforms, and internal tools to automate data flow and eliminate manual input |
+| AI Chat & Voice Systems | Project-based | Sales and lead-gen businesses | AI chat assistants for websites/funnels; AI voice agents for inbound/outbound communication |
+| Automation-as-a-Service (support model) | $300 – $3,000+/month | Existing clients | Ongoing maintenance, monitoring, optimisation, and improvement of deployed automation systems |
 
-**Current state:** [Where is this business right now? Growth phase, stable, scaling, pivoting?]
+**Pricing ranges:**
+- Small-to-medium automation setups: ~$1,000 – $5,000
+- Complex AI agent + workflow systems: ~$5,000 – $15,000+
+- Larger end-to-end transformations: $15,000+ depending on scope
+- Basic support retainers: ~$300 – $1,000/month
+- Ongoing optimisation + AI agent management: ~$1,000 – $3,000/month
+- Enterprise-style automation support: $3,000+/month depending on workload and SLA
 
-**Key metrics to track:** [What numbers matter most? Revenue, MRR, churn, close rate, client count?]
+**Current state:** Early-growth. Past the setup phase — actively delivering client solutions and refining AI automation offerings (AI agents, voice AI, workflows, integrations). High-touch implementation model with a small but growing active client base. Focus is on proof of value, quality delivery, and expanding the client base rather than high-volume servicing at scale.
+
+**Key metrics to track:** MRR, active client count, project pipeline value, average deal value, retainer churn, revenue per client over time.
 
 ---
 
-## Company 2: [Name] (if applicable)
+## Company 2: B For Bots
 
-[Repeat the structure above. Delete this section if you only have one company.]
+**What it is:** RPA (Robotic Process Automation) startup focused on intelligent automation solutions.
+
+**Your role:** Founder / technical lead.
+
+**Revenue model:** To be defined — early stage.
+
+**Current state:** Early-stage, complementary to STA. Shares the same automation domain expertise. Potential to feed into or spin out capabilities alongside STA's work.
+
+**Key metrics to track:** Development progress, any early clients or pilots.
 
 ---
 
-## Company 3: [Name] (if applicable)
+## Company 3: ReInkArts
 
-[Repeat the structure above. Delete this section if not needed.]
+**What it is:** Digital graphic design and creative services brand.
+
+**Your role:** Founder / operator.
+
+**Revenue model:** Creative services — design projects and digital deliverables.
+
+**Current state:** Active as a creative services brand, separate from the automation focus.
+
+**Key metrics to track:** Project volume, revenue.
+
+---
+
+## Other Ventures
+
+Additional domain-based and experimental projects in the automation space — including orchestration systems, workflow tools, and automation platforms. Serve as R&D and future-option exploration rather than active revenue streams.
 
 ---
 
 ## Priority Order
 
-[If you run multiple businesses, rank them by where your focus should be. The AI OS uses this to prioritise recommendations and analysis.]
-
-1. **[Company name]** — [Why it's the priority]
-2. **[Company name]** — [Why it's second]
-3. **[Company name]** — [Role/level of involvement]
+1. **STA (Scale Through Automation)** — Primary professional focus. Active client delivery, revenue generation, and the business the AI OS is built to serve.
+2. **B For Bots** — Early-stage startup in the same domain. Secondary focus with longer-term potential.
+3. **ReInkArts** — Active creative brand, separate domain. Lower priority relative to automation work.
+4. **Experimental projects** — Background R&D, no active priority.
 
 ---
 
-_Update this as your business evolves. New products, pricing changes, and strategic shifts should be reflected here so the AI OS stays current._
+_Update as the business evolves — new offerings, pricing changes, and client base growth should be reflected here._
