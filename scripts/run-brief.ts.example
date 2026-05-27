@@ -1,0 +1,116 @@
+/**
+ * Daily Brief — canonical script run by `.github/workflows/daily-brief.yml`.
+ *
+ * To use:
+ *   1. Rename to `run-brief.ts` (drop `.example`).
+ *   2. Customise the prompt in `buildPrompt()` for your business.
+ *   3. Customise the data fetch in `fetchYesterdayActivity()` for your tables.
+ *   4. Add `npm install @anthropic-ai/sdk @supabase/supabase-js` if not already in package.json.
+ *
+ * Reads context files from disk, queries Supabase, calls Claude, writes the brief
+ * to outputs/briefs/<date>.md, and posts to Slack via webhook.
+ *
+ * Environment variables (set as GitHub secrets, see daily-brief.yml.example):
+ *   ANTHROPIC_API_KEY              required
+ *   SUPABASE_URL                   required
+ *   SUPABASE_SERVICE_ROLE_KEY      required
+ *   SLACK_WEBHOOK_URL              optional
+ */
+
+import Anthropic from '@anthropic-ai/sdk';
+import { createClient } from '@supabase/supabase-js';
+import { readFileSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+const CONTEXT_DIR = 'context';
+const BRIEFS_DIR = 'outputs/briefs';
+const MODEL = 'claude-opus-4-7';
+
+function readAllContextFiles(): string {
+  const files = readdirSync(CONTEXT_DIR).filter(f => f.endsWith('.md'));
+  return files
+    .map(f => `--- ${f} ---\n${readFileSync(join(CONTEXT_DIR, f), 'utf8')}`)
+    .join('\n\n');
+}
+
+async function fetchYesterdayActivity() {
+  const supabase = createClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // Customise these queries for your actual tables. This is a template.
+  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  // Example: pull recent activity across your synced tables.
+  // Replace `meetings` / `messages` / `transactions` with your actual table names.
+  const [meetings, messages] = await Promise.all([
+    supabase.from('meetings').select('*').gte('_synced_at', since),
+    supabase.from('messages').select('*').gte('_synced_at', since),
+  ]);
+
+  return { meetings: meetings.data ?? [], messages: messages.data ?? [] };
+}
+
+function buildPrompt(context: string, activity: object): string {
+  return `You are this business's Daily Brief generator. Read the context below to understand the business, then read yesterday's activity and produce a structured Daily Brief.
+
+CONTEXT:
+${context}
+
+YESTERDAY'S ACTIVITY (raw data):
+${JSON.stringify(activity, null, 2)}
+
+Produce a Daily Brief with these sections:
+  1. Revenue and cash position
+  2. Growth signals
+  3. Yesterday's decisions and actions
+  4. Team and community pulse
+  5. SWOT
+  6. Today's focus (3-5 priorities ranked by leverage)
+
+Each section should end with implications, not just numbers. Close with data gaps to fix for next time.`;
+}
+
+async function postToSlack(headline: string) {
+  const url = process.env.SLACK_WEBHOOK_URL;
+  if (!url) return;
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: headline }),
+  });
+}
+
+async function main() {
+  const today = new Date().toISOString().slice(0, 10);
+  console.log(`Generating Daily Brief for ${today}`);
+
+  const context = readAllContextFiles();
+  const activity = await fetchYesterdayActivity();
+
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const response = await client.messages.create({
+    model: MODEL,
+    max_tokens: 4096,
+    messages: [{ role: 'user', content: buildPrompt(context, activity) }],
+  });
+
+  const brief = response.content
+    .filter(block => block.type === 'text')
+    .map(block => (block as { type: 'text'; text: string }).text)
+    .join('\n');
+
+  mkdirSync(BRIEFS_DIR, { recursive: true });
+  writeFileSync(join(BRIEFS_DIR, `${today}.md`), brief);
+  console.log(`Wrote ${BRIEFS_DIR}/${today}.md`);
+
+  // First non-empty line as the headline for Slack.
+  const headline = brief.split('\n').find(line => line.trim().length > 0) ?? `Daily Brief ${today}`;
+  await postToSlack(`*Daily Brief ${today}*\n${headline}\n\nFull brief in outputs/briefs/${today}.md`);
+}
+
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});

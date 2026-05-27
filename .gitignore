@@ -1,0 +1,26 @@
+# Environment variables (API keys, secrets)
+.env
+.env.local
+.env.*.local
+
+# Databases
+*.db
+*.db-journal
+*.sqlite
+
+# Node
+node_modules/
+package-lock.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/settings.json
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.log

@@ -1,0 +1,57 @@
+# Daily Brief — canonical scheduled-workflow template for the AI OS.
+#
+# To use:
+#   1. Rename this file to `daily-brief.yml` (drop the `.example` suffix).
+#   2. Customise the cron in `on.schedule` for your timezone.
+#   3. Add the secrets listed below in GitHub Settings → Secrets and variables → Actions.
+#   4. Commit and push. Trigger a manual run from the Actions tab to verify.
+#
+# See `reference/scheduling.md` for the full setup walkthrough.
+
+name: Daily Brief
+
+on:
+  schedule:
+    # 06:00 UTC daily. GitHub Actions cron is UTC-only — convert from your timezone explicitly.
+    # DST changes don't auto-adjust. If you're in UK and want 7am local in summer (BST), use '0 6 * * *'.
+    # If you want 7am local in winter (GMT), use '0 7 * * *'.
+    - cron: '0 6 * * *'
+  workflow_dispatch:        # manual trigger button in the GitHub Actions UI
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Daily Brief
+        run: npx tsx scripts/run-brief.ts
+        env:
+          # Required
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+          # Optional — wire these up if you want the brief delivered somewhere
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      # Optional: commit the generated brief back to the repo so you have a history.
+      # Uncomment if you want this; otherwise the brief lives only in Slack/Telegram/email.
+      # - name: Commit brief
+      #   run: |
+      #     git config user.name "github-actions[bot]"
+      #     git config user.email "github-actions[bot]@users.noreply.github.com"
+      #     git add outputs/briefs/
+      #     git diff --staged --quiet || git commit -m "Daily brief $(date -u +%Y-%m-%d)"
+      #     git push
