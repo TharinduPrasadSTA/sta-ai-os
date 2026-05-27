@@ -211,10 +211,17 @@ async function main() {
   const opportunities = await syncOpportunities();
   console.log(`  Opportunities: ${opportunities} total`);
 
-  const conversations = await syncConversations(since);
-  console.log(`  Conversations: ${conversations} total`);
-
+  // Save sync state after contacts + opportunities so incremental syncs work
+  // even if conversations fail due to Voyage rate limits.
   await setLastSync('ghl', syncStart);
+
+  try {
+    const conversations = await syncConversations(since);
+    console.log(`  Conversations: ${conversations} total`);
+  } catch (err) {
+    console.warn('  Conversations sync failed (will retry next run):', (err as Error).message);
+  }
+
   console.log('GHL sync complete.');
 }
 
