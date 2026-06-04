@@ -9,12 +9,19 @@ const GHL_HEADERS = {
   'Content-Type': 'application/json',
 };
 
-async function ghlGet(path: string): Promise<unknown> {
-  const response = await fetch(`${GHL_API}${path}`, { headers: GHL_HEADERS });
-  if (!response.ok) {
+async function ghlGet(path: string, retries = 4): Promise<unknown> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const response = await fetch(`${GHL_API}${path}`, { headers: GHL_HEADERS });
+    if (response.ok) return response.json();
+    if (response.status >= 500 && attempt < retries) {
+      const delay = attempt * 15000;
+      console.warn(`  GHL ${response.status} (attempt ${attempt}/${retries}), retrying in ${delay / 1000}s...`);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
     throw new Error(`GHL API error ${response.status} for ${path}: ${await response.text()}`);
   }
-  return response.json();
+  throw new Error(`GHL API failed after ${retries} retries for ${path}`);
 }
 
 async function syncContacts(): Promise<number> {
@@ -208,11 +215,14 @@ async function main() {
   const contacts = await syncContacts();
   console.log(`  Contacts: ${contacts} total`);
 
-  const opportunities = await syncOpportunities();
-  console.log(`  Opportunities: ${opportunities} total`);
+  try {
+    const opportunities = await syncOpportunities();
+    console.log(`  Opportunities: ${opportunities} total`);
+  } catch (err) {
+    console.warn('  Opportunities sync failed (will retry next run):', (err as Error).message);
+  }
 
-  // Save sync state after contacts + opportunities so incremental syncs work
-  // even if conversations fail due to Voyage rate limits.
+  // Contacts always do a full re-sync, so save timestamp here regardless of downstream failures.
   await setLastSync('ghl', syncStart);
 
   try {
