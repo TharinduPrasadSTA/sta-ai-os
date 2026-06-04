@@ -1,0 +1,42 @@
+name: Daily Brief
+
+on:
+  schedule:
+    - cron: '0 5 * * *'   # 05:00 UTC = 10:30am Sri Lanka / 3:00pm AEST
+  workflow_dispatch:        # Manual trigger from GitHub Actions tab
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write       # Required to commit the brief back to the repo
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Daily Brief
+        run: npx tsx scripts/run-brief.ts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      - name: Commit brief to repo
+        run: |
+          git config user.name "STA AI OS"
+          git config user.email "tharindu@scalethroughautomation.io"
+          git add outputs/briefs/
+          git diff --staged --quiet || git commit -m "brief: $(date -u +%Y-%m-%d)"
+          git push

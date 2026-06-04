@@ -9,9 +9,11 @@
     "sync:outlook": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-outlook.ts",
     "sync:teams": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-teams.ts",
     "sync:seamless": "node --env-file=.env.local --import tsx/esm scripts/sync/sync-seamless.ts",
-    "sync:all": "npm run sync:ghl && npm run sync:clickup && npm run sync:outlook && npm run sync:teams && npm run sync:seamless"
+    "sync:all": "npm run sync:ghl && npm run sync:clickup && npm run sync:outlook && npm run sync:teams && npm run sync:seamless",
+    "brief": "node --env-file=.env.local --import tsx/esm scripts/run-brief.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "@supabase/supabase-js": "^2.49.0"
   },
   "devDependencies": {
