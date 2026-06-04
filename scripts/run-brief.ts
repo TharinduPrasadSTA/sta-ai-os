@@ -381,6 +381,8 @@ Close with a **Data Gaps** section: what's missing that would improve the next v
 ${dataSection}
 
 ---
+Do not include a top-level # heading. Start directly with ## 1.
+
 Sections:
 1. Revenue and Cash Position
 2. Growth Signals (leads, pipeline trends)
