@@ -3,6 +3,22 @@ import { supabase } from './utils/db.ts';
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  runPreBrief,
+  buildSection7PromptFragment,
+  postProcessBrief,
+  renderSection7Gated,
+  renderReviewsDueBlock,
+  renderRevisitBlock,
+  markRevisitsSurfaced,
+  renderSection8,
+  buildEveningRecap,
+  type PreBriefState,
+} from './decisions/index.ts';
+
+const modeArg = process.argv.find((a) => a.startsWith('--mode='))?.split('=')[1];
+const mode: 'morning' | 'evening' = modeArg === 'evening' ? 'evening' : 'morning';
+const noSend = process.argv.includes('--no-send');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, '..');
@@ -286,7 +302,7 @@ async function postToTeams(webhookUrl: string, title: string, body: string): Pro
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-async function main() {
+async function runMorning(): Promise<void> {
   const today = new Date();
   const dateStr = today.toISOString().split('T')[0];
   const dayName = today.toLocaleDateString('en-US', {
@@ -341,6 +357,11 @@ ${formatS4(bySpace, recentEmails)}
 ${staleWarnings.length ? `⚠️ STALE DATA: ${staleWarnings.join(', ')} sync is >36h old — data may not reflect today.` : ''}
 `.trim();
 
+  // Decision Engine — pre-brief state
+  let preBrief: PreBriefState | null = null;
+  try { preBrief = await runPreBrief(); } catch (err) { console.warn('pre-brief failed (non-fatal):', err); }
+  const section7Fragment = preBrief ? buildSection7PromptFragment(preBrief) : '';
+
   // Build and call Claude
   const anthropic = new Anthropic();
 
@@ -389,18 +410,41 @@ Sections:
 3. Yesterday's Decisions and Actions
 4. Team and Client Pulse (workload concentration, relationship health)
 5. SWOT — daily, specific, data-backed
-6. Today's Focus: 3–5 priorities ranked by leverage`,
+6. Today's Focus: 3–5 priorities ranked by leverage
+${section7Fragment}`,
       },
     ],
   });
 
-  const briefBody = response.content[0].type === 'text' ? response.content[0].text : '';
+  let briefBody = response.content[0].type === 'text' ? response.content[0].text : '';
   const title = `Daily Brief — ${dayName}`;
   const usage = response.usage as { input_tokens: number; output_tokens: number; cache_read_input_tokens?: number };
 
   console.log(
     `Tokens: ${usage.input_tokens} input (${usage.cache_read_input_tokens ?? 0} cached), ${usage.output_tokens} output`
   );
+
+  // Decision Engine — post-process (inject rec ids, suppress/boost)
+  if (preBrief) {
+    try {
+      if (!preBrief.gate_active) {
+        const { brief: processed } = await postProcessBrief(briefBody, 'daily-brief');
+        briefBody = processed;
+      } else {
+        briefBody = briefBody + '\n' + renderSection7Gated(preBrief);
+      }
+      const reviews = renderReviewsDueBlock(preBrief);
+      const revisits = renderRevisitBlock(preBrief);
+      if (reviews) briefBody += '\n' + reviews;
+      if (revisits) briefBody += '\n' + revisits;
+      if (preBrief.revisits_due.length > 0) await markRevisitsSurfaced(preBrief);
+    } catch (err) { console.warn('Decision Engine post-process failed (non-fatal):', err); }
+
+    try {
+      const section8 = await renderSection8(new Date());
+      if (section8) briefBody += '\n' + section8;
+    } catch (err) { console.warn('Section 8 render failed (non-fatal):', err); }
+  }
 
   // Write to file
   const outputDir = join(ROOT, 'outputs', 'briefs');
@@ -420,6 +464,37 @@ Sections:
       console.warn('Teams delivery failed (brief still saved to file):', (err as Error).message);
     }
   }
+} // end runMorning
+
+async function runEvening(): Promise<void> {
+  const today = new Date();
+  const dateStr = today.toISOString().split('T')[0];
+  console.log(`Generating Evening Recap for ${dateStr}...`);
+
+  const recap = await buildEveningRecap();
+  const outputDir = join(ROOT, 'outputs', 'briefs');
+  mkdirSync(outputDir, { recursive: true });
+  const outputPath = join(outputDir, `${dateStr}-evening.md`);
+  writeFileSync(outputPath, `# Evening Recap — ${dateStr}\n_${new Date().toUTCString()}_\n\n${recap}`, 'utf-8');
+  console.log(`Evening recap written → outputs/briefs/${dateStr}-evening.md`);
+  console.log(recap);
+
+  if (!noSend) {
+    const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
+    if (webhookUrl) {
+      try {
+        await postToTeams(webhookUrl, `Evening Recap — ${dateStr}`, recap);
+        console.log('Evening recap posted to Teams.');
+      } catch (err) {
+        console.warn('Teams delivery failed (recap still saved to file):', (err as Error).message);
+      }
+    }
+  }
+}
+
+async function main() {
+  if (mode === 'evening') { await runEvening(); return; }
+  await runMorning();
 }
 
 main().catch((err) => {

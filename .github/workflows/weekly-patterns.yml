@@ -1,0 +1,29 @@
+name: Weekly Pattern Rollup
+
+on:
+  schedule:
+    - cron: '30 6 * * 1'   # 06:30 UTC Monday = 12:00pm Sri Lanka (before morning brief)
+  workflow_dispatch:
+
+jobs:
+  patterns:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run pattern rollup
+        run: npx tsx scripts/decisions/refresh-patterns.ts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          VOYAGE_API_KEY: ${{ secrets.VOYAGE_API_KEY }}

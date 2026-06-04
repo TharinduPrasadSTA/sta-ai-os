@@ -1,0 +1,42 @@
+name: Evening Brief
+
+on:
+  schedule:
+    - cron: '0 18 * * *'   # 18:00 UTC = 11:30pm Sri Lanka
+  workflow_dispatch:
+
+jobs:
+  evening:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Generate Evening Recap
+        run: npx tsx scripts/run-brief.ts --mode=evening
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          TEAMS_WEBHOOK_URL: ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+      - name: Commit evening recap
+        run: |
+          git config user.name "STA AI OS"
+          git config user.email "tharindu@scalethroughautomation.io"
+          git add outputs/briefs/
+          git diff --staged --quiet || git commit -m "brief: $(date -u +%Y-%m-%d)-evening"
+          git push
